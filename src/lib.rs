@@ -48,9 +48,12 @@ impl<const BLOCK_SIZE: usize, const OUTPUT_SIZE: usize, H: HashFn<BLOCK_SIZE, OU
 
         // compute final HMAC
         H::hash(
-            o_key_pad
-                .iter()
-                .chain(H::hash(i_key_pad.iter().chain(msg.iter())).iter()),
+            [
+                &o_key_pad,
+                H::hash([&i_key_pad, msg].concat().as_ref()).as_ref(),
+            ]
+            .concat()
+            .as_ref(),
         )
     }
 }
