@@ -23,15 +23,11 @@ impl<const BLOCK_SIZE: usize, const OUTPUT_SIZE: usize, H: HashFn<BLOCK_SIZE, OU
             Ordering::Greater => {
                 let hash = H::hash(secret);
 
-                for i in 0..hash.len() {
-                    block_sized_key[i] = hash[i];
-                }
+                block_sized_key[0..hash.len()].copy_from_slice(&hash);
             }
             // pad secret
             Ordering::Less | Ordering::Equal => {
-                for i in 0..secret.len() {
-                    block_sized_key[i] = secret[i];
-                }
+                block_sized_key[0..secret.len()].copy_from_slice(secret);
             }
         }
 
