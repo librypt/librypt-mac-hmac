@@ -46,14 +46,17 @@ impl<const BLOCK_SIZE: usize, const OUTPUT_SIZE: usize, H: HashFn<BLOCK_SIZE, OU
             o_key_pad[i] = block_sized_key[i] ^ 0x36;
         }
 
+        let mut hasher = H::new();
+
+        hasher.update(&i_key_pad);
+        hasher.update(msg);
+
+        let hash = hasher.finalize_reset();
+
+        hasher.update(&o_key_pad);
+        hasher.update(&hash);
+
         // compute final HMAC
-        H::hash(
-            [
-                &o_key_pad,
-                H::hash([&i_key_pad, msg].concat().as_ref()).as_ref(),
-            ]
-            .concat()
-            .as_ref(),
-        )
+        hasher.finalize()
     }
 }
