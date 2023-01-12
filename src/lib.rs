@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, marker::PhantomData};
+use std::cmp::Ordering;
 
 use librypt_hash::HashFn;
 use librypt_mac::{Mac, MacFn};
@@ -8,12 +8,16 @@ pub struct Hmac<
     const BLOCK_SIZE: usize,
     const OUTPUT_SIZE: usize,
     H: HashFn<BLOCK_SIZE, OUTPUT_SIZE>,
->(PhantomData<H>);
+> {
+    hasher: H,
+    i_key_pad: [u8; BLOCK_SIZE],
+    o_key_pad: [u8; BLOCK_SIZE],
+}
 
 impl<const BLOCK_SIZE: usize, const OUTPUT_SIZE: usize, H: HashFn<BLOCK_SIZE, OUTPUT_SIZE>>
     MacFn<OUTPUT_SIZE> for Hmac<BLOCK_SIZE, OUTPUT_SIZE, H>
 {
-    fn compute(msg: &[u8], secret: &[u8]) -> Mac<OUTPUT_SIZE> {
+    fn new(secret: &[u8]) -> Self {
         // TODO: Zero this out so its not just left in memory.
         let mut block_sized_key = [0u8; BLOCK_SIZE];
 
@@ -45,15 +49,38 @@ impl<const BLOCK_SIZE: usize, const OUTPUT_SIZE: usize, H: HashFn<BLOCK_SIZE, OU
         let mut hasher = H::new();
 
         hasher.update(&i_key_pad);
-        hasher.update(msg);
 
-        let hash = hasher.finalize_reset();
+        Self {
+            hasher,
+            i_key_pad,
+            o_key_pad,
+        }
+    }
 
-        hasher.update(&o_key_pad);
-        hasher.update(&hash);
+    fn update(&mut self, data: &[u8]) {
+        self.hasher.update(data);
+    }
 
-        // compute final HMAC
-        hasher.finalize()
+    fn finalize(mut self) -> Mac<OUTPUT_SIZE> {
+        let hash = self.hasher.finalize_reset();
+
+        self.hasher.update(&self.o_key_pad);
+        self.hasher.update(&hash);
+
+        self.hasher.finalize()
+    }
+
+    fn finalize_reset(&mut self) -> Mac<OUTPUT_SIZE> {
+        let hash = self.hasher.finalize_reset();
+
+        self.hasher.update(&self.o_key_pad);
+        self.hasher.update(&hash);
+
+        let mac = self.hasher.finalize_reset();
+
+        self.hasher.update(&self.i_key_pad);
+
+        mac
     }
 }
 
@@ -66,7 +93,7 @@ mod tests {
 
     #[test]
     fn test_hmac() {
-        let mac = Hmac::<64, 16, Md5>::compute(b"Hello, world!", b"test");
+        let mac = Hmac::<64, 16, Md5>::mac(b"Hello, world!", b"test");
 
         assert_eq!(
             mac.encode_hex::<String>(),
