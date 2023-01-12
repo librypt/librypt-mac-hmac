@@ -35,11 +35,11 @@ impl<const BLOCK_SIZE: usize, const OUTPUT_SIZE: usize, H: HashFn<BLOCK_SIZE, OU
         let mut o_key_pad = [0u8; BLOCK_SIZE];
 
         for i in 0..block_sized_key.len() {
-            i_key_pad[i] = block_sized_key[i] ^ 0x5c;
+            i_key_pad[i] = block_sized_key[i] ^ 0x36;
         }
 
         for i in 0..block_sized_key.len() {
-            o_key_pad[i] = block_sized_key[i] ^ 0x36;
+            o_key_pad[i] = block_sized_key[i] ^ 0x5c;
         }
 
         let mut hasher = H::new();
@@ -54,5 +54,23 @@ impl<const BLOCK_SIZE: usize, const OUTPUT_SIZE: usize, H: HashFn<BLOCK_SIZE, OU
 
         // compute final HMAC
         hasher.finalize()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use hex::ToHex;
+    use librypt_hash_md5::Md5;
+
+    #[test]
+    fn test_hmac() {
+        let mac = Hmac::<64, 16, Md5>::compute(b"Hello, world!", b"test");
+
+        assert_eq!(
+            mac.encode_hex::<String>(),
+            "5286559abc8deaa260e8335499b2f6da"
+        );
     }
 }
