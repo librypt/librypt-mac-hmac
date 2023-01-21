@@ -6,8 +6,7 @@ edition = "2021"
 [dependencies]
 librypt-mac = { version = "0.1", git = "https://www.github.com/librypt/librypt-mac" }
 librypt-hash = { version = "0.1", git = "https://www.github.com/librypt/librypt-hash" }
-librypt-secret = { version = "0.1", git = "https://www.github.com/librypt/librypt-secret" }
 
 [dev-dependencies]
 hex = "0.4"
-librypt-hash-md5 = { version = "0.1", git = "https://www.github.com/librypt/librypt-hash-md5" }
+librypt-hash-sha1 = { version = "0.1", git = "https://www.github.com/librypt/librypt-hash-sha1"}

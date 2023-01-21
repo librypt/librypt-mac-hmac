@@ -89,15 +89,15 @@ mod tests {
     use super::*;
 
     use hex::ToHex;
-    use librypt_hash_md5::Md5;
+    use librypt_hash_sha1::Sha1;
 
     #[test]
     fn test_hmac() {
-        let mac = Hmac::<64, 16, Md5>::mac(b"Hello, world!", b"test");
+        let mac = Hmac::<64, 20, Sha1>::mac(b"test", b"Hello, world!");
 
         assert_eq!(
             mac.encode_hex::<String>(),
-            "5286559abc8deaa260e8335499b2f6da"
+            "1fc78189f4e36c06d52898c0e2f595a718019563"
         );
     }
 }
