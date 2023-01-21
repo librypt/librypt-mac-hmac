@@ -95,6 +95,12 @@ mod tests {
     fn test_hmac() {
         let mac = Hmac::<64, 16, Md5>::mac(b"Hello, world!", b"test");
 
+        if cfg!(target_endian = "big") {
+            println!("Big Endian");
+        } else {
+            println!("Little Endian");
+        }
+
         assert_eq!(
             mac.encode_hex::<String>(),
             "5286559abc8deaa260e8335499b2f6da"
